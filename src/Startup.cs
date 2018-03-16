@@ -6,6 +6,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using StatsdClient;
+using System.Threading.Tasks;
 
 namespace SampleDataCollector
 {
@@ -16,11 +17,12 @@ namespace SampleDataCollector
             Configuration = configuration;
 
             var place = Environment.GetEnvironmentVariable("ENDPOINT") ?? "127.0.0.1";
+            var svcVersion = Environment.GetEnvironmentVariable("SVC_VERSION") ?? "default";
             var dogstatsdConfig = new StatsdConfig
             {
                 StatsdServerName = place,
                 StatsdPort = 8125, // Optional; default is 8125
-                Prefix = "myApp" // Optional; by default no prefix will be prepended
+                Prefix = $"myApp{svcVersion}" // Optional; by default no prefix will be prepended
             };
 
             StatsdClient.DogStatsd.Configure(dogstatsdConfig);
@@ -41,7 +43,6 @@ namespace SampleDataCollector
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
             app.UseStaticFiles();
-            // loggerfactory.AddEventSourceLogger();
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();

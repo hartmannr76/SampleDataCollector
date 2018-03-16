@@ -1,8 +1,6 @@
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
-using System.Runtime;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
@@ -27,14 +25,27 @@ namespace SampleDataCollector
             stoppingToken.Register(() =>
                     _logger.LogDebug($"DataCollector background task is stopping."));
 
+            bool.TryParse(Environment.GetEnvironmentVariable("INCLUDE_GC"), out var includeGc);
+
             while (!stoppingToken.IsCancellationRequested)
             {
                 _logger.LogDebug($"DataCollector task doing background work.");
                 var assm = Assembly.GetExecutingAssembly().GetName().Name;
                 using (var proc = Process.GetCurrentProcess())
                 {
+                    Func<long, double> bytesToMb = (bytes) => bytes / (1024.0 * 1024.0);
                     DogStatsd.Gauge($"dotnet.{assm}.process.threads", proc.Threads.Count);
-                    DogStatsd.Gauge($"dotnet.{assm}.process.memory.workingset", proc.WorkingSet64);
+                    DogStatsd.Gauge($"dotnet.{assm}.process.memory.workingset.mb", bytesToMb(proc.WorkingSet64));
+                    DogStatsd.Gauge($"dotnet.{assm}.process.memory.workingset.raw", proc.WorkingSet64);
+                    DogStatsd.Gauge($"dotnet.{assm}.process.memory.virtual.mb", bytesToMb(proc.VirtualMemorySize64));
+                    DogStatsd.Gauge($"dotnet.{assm}.process.memory.virtual.raw", proc.VirtualMemorySize64);
+
+                    if (includeGc)
+                    {
+                        var gcMemory = GC.GetTotalMemory(false);
+                        DogStatsd.Gauge($"dotnet.{assm}.process.memory.gc.mb", bytesToMb(gcMemory));
+                        DogStatsd.Gauge($"dotnet.{assm}.process.memory.gc.raw", gcMemory);
+                    }
 
                 }
                 await Task.Delay(TimeSpan.FromSeconds(1), stoppingToken);

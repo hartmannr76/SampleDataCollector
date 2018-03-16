@@ -1,8 +1,8 @@
-FROM microsoft/aspnetcore:2.0.3 as base
+FROM microsoft/aspnetcore:2.0 as base
 WORKDIR /app
 EXPOSE 8000
 
-FROM microsoft/aspnetcore-build:2.0.3 AS build
+FROM microsoft/aspnetcore-build:2.0 AS build
 WORKDIR /src
 COPY . .
 RUN dotnet restore

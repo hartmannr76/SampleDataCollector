@@ -6,7 +6,9 @@ services:
       - grafana_graphite
     environment:
       - ENDPOINT=grafana_graphite
-      # - COMPlus_GCHeapCount=2 # Good throughput
+      - SVC_VERSION=1
+      # - INCLUDE_GC=true
+      - COMPlus_GCHeapCount=2 # Good throughput
       # - COMPlus_GCNoAffinitize=1 # Bad throughput
       # - COREHOST_TRACE=1
     ports:

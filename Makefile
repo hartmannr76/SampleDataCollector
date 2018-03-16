@@ -8,8 +8,11 @@ prep :
 		log/graphite/webapp \
 		log/elasticsearch
 
-up : prep
+run : prep
 	docker-compose up -d
 
-down :
+stop :
 	docker-compose down
+
+rebuild : stop
+	docker-compose build
